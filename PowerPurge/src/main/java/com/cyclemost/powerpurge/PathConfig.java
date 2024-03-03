@@ -1,0 +1,149 @@
+package com.cyclemost.powerpurge;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+
+/**
+ * Holds values loaded from the .shelltree config file.
+ * 
+ * @author dbridges
+ */
+public class PathConfig {
+  
+  private static Gson GSON = new Gson();
+  
+  private String name;
+  private String filePattern;
+  private boolean recursive;
+  private long fileAgeDays;
+  private String archiveFolder;
+  private long archiveAgeDays;
+  List<String> paths;
+  
+  /**
+   * Creates an empty config.
+   */
+  public PathConfig() {
+  }
+  
+  @Override
+  public String toString() {
+    return String.format("%s (filePattern: %s, recursive: %s, fileAgeDays: %s, archiveFolder: %s, archiveAgeDays: %s)",
+      getName(),
+      getFilePattern(),
+      isRecursive(),
+      getFileAgeDays(),
+      getArchiveFolder(),
+      getArchiveAgeDays());
+  }
+  
+  public boolean isFilePurgeEnabled() {
+    return fileAgeDays > 0;
+  }
+  
+  /**
+   * Returns a flag indicating whether purged files in this folder
+   * will be archived. 
+   * 
+   * @return 
+   */
+  public boolean isFileArchiveEnabled() {
+    return StringUtils.isBlank(archiveFolder) && fileAgeDays > 0;
+  }
+  
+  public List<String> getConfigWarnings() {
+    List<String> warnings = new ArrayList<>();
+    if (fileAgeDays < 1) {
+      warnings.add("fileAgeDays not defined");
+    }
+
+    return warnings;
+  }
+  
+  public static PathConfig fromJson(String json) {
+    return GSON.fromJson(json, PathConfig.class);
+  }
+  
+  public String toJson(String json) {
+    return GSON.toJson(this);
+  }
+  
+  public static List<PathConfig> fromFile(String filePath) throws Exception {
+    try {
+      String json = FileUtils.readFileToString(new File(filePath), Charset.defaultCharset());
+      Type listType = new TypeToken<List<PathConfig>>(){}.getType();
+      return GSON.fromJson(json, listType);
+    }
+    catch (Exception ex) {
+      throw new Exception("Error loading config", ex);
+    }
+  }
+  
+  //// get/set methods
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getFilePattern() {
+    return filePattern;
+  }
+
+  public void setFilePattern(String filePattern) {
+    this.filePattern = filePattern;
+  }
+
+  public boolean isRecursive() {
+    return recursive;
+  }
+
+  public void setRecursive(boolean recursive) {
+    this.recursive = recursive;
+  }
+
+  public long getFileAgeDays() {
+    return fileAgeDays;
+  }
+
+  public void setFileAgeDays(long fileAgeDays) {
+    this.fileAgeDays = fileAgeDays;
+  }
+
+  public String getArchiveFolder() {
+    return archiveFolder;
+  }
+
+  public void setArchiveFolder(String archiveFolder) {
+    this.archiveFolder = archiveFolder;
+  }
+
+  public long getArchiveAgeDays() {
+    return archiveAgeDays;
+  }
+
+  public void setArchiveAgeDays(long archiveAgeDays) {
+    this.archiveAgeDays = archiveAgeDays;
+  }  
+  
+  public List<String> getPaths() {
+    if (paths == null) {
+      paths = new ArrayList<>();
+    }
+    return paths;
+  }
+}
