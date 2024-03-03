@@ -6,24 +6,26 @@ The program runs based on a specified config file that contains the purge rules 
 ### Config File
 The config file is a .json file with the following structure:
 
-    [
-        {
-            "name": "My purge rule",
-            "filePattern": "*.*",
-            "recursive": "true",
-            "fileAgeDays": 30,
-            "archiveFolder": "archive",
-            "archiveAgeDays": 90,
-            "paths": [
-                "/path1/path2",
-                "/path3/path4"
-            ]
-        },
-        {
-            "name": "Another purge rule",
-            ...
-        }
-    ]
+```json
+[
+    {
+        "name": "My purge rule",
+        "filePattern": "*.*",
+        "recursive": "true",
+        "fileAgeDays": 30,
+        "archiveFolder": "archive",
+        "archiveAgeDays": 90,
+        "paths": [
+            "/path1/path2",
+            "/path3/path4"
+        ]
+    },
+    {
+        "name": "Another purge rule",
+        ...
+    }
+]
+```
 
 Rule Properties:
 - name: The name of the rule. It can be anything and doesn't have to be unique.
