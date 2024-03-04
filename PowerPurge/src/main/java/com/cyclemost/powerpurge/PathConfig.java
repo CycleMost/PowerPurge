@@ -15,19 +15,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * Holds values loaded from the .shelltree config file.
+ * Holds the config values
  * 
  * @author dbridges
  */
 public class PathConfig {
   
-  private static Gson GSON = new Gson();
+  private static final Gson GSON = new Gson();
   
   private String name;
   private String filePattern;
   private boolean recursive;
   private long fileAgeDays;
-  private String archiveFolder;
   private long archiveAgeDays;
   List<String> paths;
   
@@ -39,12 +38,11 @@ public class PathConfig {
   
   @Override
   public String toString() {
-    return String.format("%s (filePattern: %s, recursive: %s, fileAgeDays: %s, archiveFolder: %s, archiveAgeDays: %s)",
+    return String.format("%s (filePattern: %s, recursive: %s, fileAgeDays: %s, archiveAgeDays: %s)",
       getName(),
       getFilePattern(),
       isRecursive(),
       getFileAgeDays(),
-      getArchiveFolder(),
       getArchiveAgeDays());
   }
   
@@ -59,7 +57,7 @@ public class PathConfig {
    * @return 
    */
   public boolean isFileArchiveEnabled() {
-    return StringUtils.isBlank(archiveFolder) && fileAgeDays > 0;
+    return archiveAgeDays > 0;
   }
   
   public List<String> getConfigWarnings() {
@@ -122,14 +120,6 @@ public class PathConfig {
 
   public void setFileAgeDays(long fileAgeDays) {
     this.fileAgeDays = fileAgeDays;
-  }
-
-  public String getArchiveFolder() {
-    return archiveFolder;
-  }
-
-  public void setArchiveFolder(String archiveFolder) {
-    this.archiveFolder = archiveFolder;
   }
 
   public long getArchiveAgeDays() {

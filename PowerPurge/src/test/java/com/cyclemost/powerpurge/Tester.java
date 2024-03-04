@@ -15,6 +15,7 @@ import org.junit.Test;
 public class Tester {
  
   @Test
+  @Ignore
   public void testLoadConfig() throws Exception {
     List<PathConfig> configs = PathConfig.fromFile("/Users/dbridges/Desktop/purge-config.json");
     for (var config : configs) {
@@ -23,14 +24,13 @@ public class Tester {
   }
   
   @Test
+  @Ignore
   public void testCommand() throws ParseException {
-    //ShellTree.main(new String[] {});
     PowerPurge.main(new String[] {
       //"-report", 
-      "-prune",
-      "-path",
-      "/mnt/projects"
-      //"/Users/dbridges/CycleMost/shelltree/shelltree/src/main/resources/testroot"
+      //"-prune",
+      "-config",
+      "/Users/dbridges/Desktop/purge-config.json"
     });
   }
   

@@ -8,6 +8,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.UnrecognizedOptionException;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,19 +21,18 @@ public class PowerPurge {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PowerPurge.class);
 
-  private static final String CMD_PATH = "path";
+  private static final String CMD_CONFIG = "config";
   private static final String CMD_REPORT = "report";
-  private static final String CMD_PRUNE_ARCHIVE = "prune";
   
   public static void main(String[] args) throws ParseException {
 
     // Create command line options
     Options options = new Options();
     
-    Option processPathOption = Option.builder(CMD_PATH)
-                         .argName("path [path]...")
+    Option processPathOption = Option.builder(CMD_CONFIG)
+                         .argName("config [path]...")
                          .hasArgs()
-                         .desc("root path(s) to process")
+                         .desc("config file(s) to process")
                          .build();    
     options.addOption(processPathOption);
     
@@ -41,23 +41,25 @@ public class PowerPurge {
                          .build();    
     options.addOption(reportOnlyOption);
     
-    Option pruneOption = Option.builder(CMD_PRUNE_ARCHIVE)
-                         .desc("remove empty archive folders")
-                         .build();    
-    options.addOption(pruneOption);
-    
     //parse the options passed as command line arguments
-    CommandLineParser parser = new DefaultParser();
-    CommandLine cmd = parser.parse(options, args);
+    try {
+      CommandLineParser parser = new DefaultParser();
+      CommandLine cmd = parser.parse(options, args);
 
-    boolean reportOnly = cmd.hasOption(CMD_REPORT);
-    boolean pruneArchive = cmd.hasOption(CMD_PRUNE_ARCHIVE);
+      boolean reportOnly = cmd.hasOption(CMD_REPORT);
 
-    if (cmd.hasOption(CMD_PATH)) {
-      String paths[] = cmd.getOptionValues(CMD_PATH);
-      run(paths, reportOnly, pruneArchive);
-    } else {
-      printHelp(options);
+      if (cmd.hasOption(CMD_CONFIG)) {
+        String paths[] = cmd.getOptionValues(CMD_CONFIG);
+        run(paths, reportOnly);
+      } else {
+        printHelp(options);
+      }
+    }
+    catch (UnrecognizedOptionException ex) {
+      LOGGER.error(ex.getMessage());
+    }
+    catch (Exception ex) {
+      LOGGER.error("Error", ex);
     }
   }
 
@@ -67,7 +69,7 @@ public class PowerPurge {
     formatter.printHelp(".", options);
   }
   
-  private static void run(String[] configPaths, boolean reportOnly, boolean pruneArchive) {
+  private static void run(String[] configPaths, boolean reportOnly) {
     if (configPaths == null || configPaths.length == 0) {
       LOGGER.info("No config path specified");
       return;
@@ -75,12 +77,11 @@ public class PowerPurge {
     
     PowerPurgeProcessor processor = new PowerPurgeProcessor();
     processor.setReportOnly(reportOnly);
-    processor.setPruneArchive(pruneArchive);
 
     for (String configPath : configPaths) {
     
       try {
-        LOGGER.debug("Processing config: {}", configPath);
+        LOGGER.info("Processing config: {}", configPath);
         if (reportOnly) {
           LOGGER.info("Running in report-only mode; no changes will be made");
         }    

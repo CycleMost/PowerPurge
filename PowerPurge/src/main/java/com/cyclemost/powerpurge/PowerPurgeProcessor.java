@@ -15,7 +15,6 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +34,6 @@ public class PowerPurgeProcessor {
   
   private static final Logger LOGGER = LoggerFactory.getLogger(PowerPurgeProcessor.class);
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HHmmss"); 
-  public static List<String> CONFIG_FILE_NAMES = Arrays.asList(new String[] {"shelltree.properties", ".shelltree"});
 
   boolean reportOnly;
   boolean pruneArchive;
@@ -56,9 +54,9 @@ public class PowerPurgeProcessor {
    */
   public void process(PathConfig config) {
     
+    LOGGER.info("Config: {}", config);
     for (String path : config.getPaths()) {
       try {
-        ++totalPathsProcessed;
         performActions(path, config);
       }
       catch (Exception ex) {
@@ -75,8 +73,15 @@ public class PowerPurgeProcessor {
    */
   void performActions(String path, PathConfig config) throws IOException {
     
-    LOGGER.info( "Processing: {}", path);
-    LOGGER.debug("Config: {}", config);
+    String[] level = StringUtils.split(path, "/");
+    if (level.length < 2) {
+      // Safety check
+      LOGGER.error("Cannot purge root or top-level folder {}", path);
+      return;
+    }
+    
+    LOGGER.info("Processing: {}", path);
+    ++totalPathsProcessed;
         
     int archiveCount = 0;
     int deleteCount = 0;
@@ -87,41 +92,60 @@ public class PowerPurgeProcessor {
         
     // Get list of files to be purged
     List<File> filesToPurge = new ArrayList<>();
+    List<File> archivesToPurge = new ArrayList<>();
     var files = Paths.get(path).toFile().listFiles();
+    if (files == null) {
+      return;
+    }
     for (var file : files) {
-      if (fileNameMatch(file, fileFilter, config)) {
+      if (file.isHidden()) {
+        // TODO: Make this an option?
+        continue;
+      }
+      if (config.isFileArchiveEnabled() && isArchiveFile(file)) {
+        long fileAge = fileAgeDays(file);
+        if (fileAge > config.getArchiveAgeDays()) {
+          LOGGER.debug("Delete archive file {} ({} days old)", file.getName(), fileAge);
+          archivesToPurge.add(file);
+        }
+        continue;
+      }
+      if (file.isFile() && fileNameMatch(file, fileFilter, config)) {
         // File pattern matches; check file age
         long fileAge = fileAgeDays(file);
         if (config.isFilePurgeEnabled() && fileAge > config.getFileAgeDays()) {
-          LOGGER.info("Delete file {} ({} days old)", file.getName(), fileAge);
+          LOGGER.debug("Delete file {} ({} days old)", file.getName(), fileAge);
           filesToPurge.add(file);
         }
       }
+      if (file.isDirectory() && config.isRecursive()) {
+        performActions(file.getPath(), config);
+      }
     }
 
+    for (File file : filesToPurge) {
+      totalSize += FileUtils.sizeOf(file);
+    }
+    for (File file : archivesToPurge) {
+      totalSize += FileUtils.sizeOf(file);
+    }
+    grandTotalSize += totalSize;
+    
     if (reportOnly) {
       return;
     }
     
     // Archive files
-    Path archiveFolderPath = Paths.get(path, config.getArchiveFolder());
-    if (!filesToPurge.isEmpty() && config.isFileArchiveEnabled()) {
+    if ((!filesToPurge.isEmpty()) && config.isFileArchiveEnabled()) {
       String archiveName = String.format("archive-%s.zip", DATE_FORMAT.format(new Date()));
-      File archivePath = Paths.get(path, config.getArchiveFolder(), archiveName).toFile();
-      if (!archiveFolderPath.toFile().exists()) {
-        if (!archiveFolderPath.toFile().mkdir()) {
-          LOGGER.error("Could not create folder {}", archiveFolderPath);
-          // archive folder create failed, so don't delete files.
-          return;
-        }
-      }  
+      File archivePath = Paths.get(path, archiveName).toFile();
       Map<String, String> env = new HashMap<>();
       env.put("create", String.valueOf(!archivePath.exists()));    
       try (FileSystem zipFileSystem = FileSystems.newFileSystem(archivePath.toPath(), env)) {
         for (File file : filesToPurge) {
           if (addFileToArchive(file, zipFileSystem)) {
             ++archiveCount;
-            LOGGER.info("Archived file: {}", file.getName());
+            LOGGER.debug("Archived file: {}", file.getName());
           }
           else {
             // archive failed; do not delete file
@@ -132,12 +156,11 @@ public class PowerPurgeProcessor {
     }
     
     // Delete files
+    filesToPurge.addAll(archivesToPurge);
     for (File file : filesToPurge) {
       try {
-        long fileSize = FileUtils.sizeOf(file);
         Files.delete(file.toPath());
         ++deleteCount;
-        totalSize += fileSize;      
       }
       catch (IOException ex) {
         LOGGER.error("Error deleting {}", file, ex);
@@ -149,56 +172,6 @@ public class PowerPurgeProcessor {
     
     archiveTotalCount += archiveCount;
     deleteTotalCount += deleteCount;
-    grandTotalSize += totalSize;
-    
-    // Purge archives
-    if (config.getArchiveAgeDays() > 0 && archiveFolderPath != null) {
-      File archiveFolder = archiveFolderPath.toFile();
-      if (archiveFolder.exists()) {
-        for (File file : archiveFolder.listFiles()) {
-          if (isArchiveFile(file)) {
-            long fileAge = fileAgeDays(file);
-            if (fileAge > config.getArchiveAgeDays()) {
-              LOGGER.info("Delete archive file {} ({} days old)", file.getName(), fileAge);
-              if (!reportOnly) {
-                long fileSize = FileUtils.sizeOf(file);
-                if (file.delete()) {
-                  grandTotalSize += fileSize;
-                }
-              }
-            }
-          }
-        }
-        
-        // If archive folder is empty, remove it
-        if (pruneArchive) {
-          boolean hasFiles = false;
-          List<File> trash = new ArrayList<>();
-          for (var file : archiveFolder.listFiles()) {
-            if (file.isFile() && !file.isHidden()) {
-              hasFiles = true;
-              break;
-            }
-            trash.add(file);
-          }
-          if (!hasFiles) {
-            try {
-              // All remaining files are hidden ones. trash them.
-              LOGGER.info("Removing empty archive folder {}", archiveFolder);
-              for (var file : trash) {
-                Files.delete(file.toPath());
-              }
-              Files.delete(archiveFolderPath);
-            }
-            catch (IOException ex) {
-              LOGGER.error("Could not prune {}", archiveFolder, ex);
-            }
-          }
-        }
-        
-      }
-    }
-    
   }
   
   /**
@@ -208,40 +181,14 @@ public class PowerPurgeProcessor {
    * @return 
    */
   private static boolean isArchiveFile(File file) {
-    return !file.isHidden() && file.getName().toLowerCase().endsWith(".zip");
+    return !file.isHidden() && 
+      file.getName().toLowerCase().startsWith("archive") &&
+      file.getName().toLowerCase().endsWith(".zip");
   }
   
   /**
    * Returns true if all of the following are true.
    * <ul>
-   * <li>File is a directory</li>
-   * <li>File is not hidden</li>
-   * <li>File name is not the archive folder</li>
-   * </ul>
-   * 
-   * @param file
-   * @param config
-   * @return 
-   */
-  static boolean isValidDirectory(File file, PathConfig config) {
-    if (!file.isDirectory()) {
-      return false;
-    }
-    if (file.isHidden()) {
-      return false;
-    }
-    if (config.getArchiveFolder() != null) {
-      if (file.getName().equalsIgnoreCase(config.getArchiveFolder())) {
-        return false;
-      }
-    }
-    return true;
-  }
-  
-  /**
-   * Returns true if all of the following are true.
-   * <ul>
-   * <li>File is not a properties file</li>
    * <li>File is not hidden</li>
    * <li>File name matches the config pattern </li>
    * </ul>
@@ -255,8 +202,7 @@ public class PowerPurgeProcessor {
     
     return nameMatch && 
            file.isFile() &&
-           !file.isHidden() &&
-           !CONFIG_FILE_NAMES.contains(file.getName());
+           !file.isHidden();
   }
   
   /**
