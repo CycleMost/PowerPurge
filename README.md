@@ -32,4 +32,5 @@ The config file is a .json file with the following structure:
 - <code>recursive</code>: a flag indicating whether to apply these rules to all child folders (default=false)
 - <code>fileAgeDays</code>: files older than this number of days will be purged (default=-1, meaning do not purge)
 - <code>archiveAgeDays</code>: if greater than zero, deleted files will be placed into an archive zip file in the folder they were deleted from. The archive filename will be "archive-{date}_{time}.zip". These archive files will be removed by PowerPurge once they are <code>archiveAgeDays</code> old. If zero (the default), archives will not be created.
+- <code>paths</code>: The list of paths to apply the purge rule to. If the <code>recursive</code> option is set, then all subdirectories under each path will also have the rule applied.
 
