@@ -156,6 +156,7 @@ public class PowerPurgeProcessor {
     }
     
     // Delete files
+    LOGGER.info("Deleting files...");
     filesToPurge.addAll(archivesToPurge);
     for (File file : filesToPurge) {
       try {

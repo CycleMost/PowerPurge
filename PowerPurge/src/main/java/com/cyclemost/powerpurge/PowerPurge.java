@@ -30,7 +30,7 @@ public class PowerPurge {
     Options options = new Options();
     
     Option processPathOption = Option.builder(CMD_CONFIG)
-                         .argName("config [path]...")
+                         .argName("config-file [config-file]...")
                          .hasArgs()
                          .desc("config file(s) to process")
                          .build();    
