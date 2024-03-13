@@ -181,10 +181,11 @@ public class PowerPurgeProcessor {
    * @param file
    * @return 
    */
-  private static boolean isArchiveFile(File file) {
+  public static boolean isArchiveFile(File file) {
     return !file.isHidden() && 
       file.getName().toLowerCase().startsWith("archive") &&
-      file.getName().toLowerCase().endsWith(".zip");
+      (file.getName().toLowerCase().endsWith(".zip") ||
+       file.getName().toLowerCase().endsWith(".gz"));
   }
   
   /**

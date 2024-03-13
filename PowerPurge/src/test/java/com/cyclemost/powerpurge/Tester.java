@@ -16,6 +16,24 @@ public class Tester {
  
   @Test
   @Ignore
+  public void testIsArchive() throws Exception {
+    String[] fileNames = {
+      "archivefile.dat",
+      "archivefile.txt",
+      "archivefile.zip",
+      "archivefile.gz",
+      "archivefile.gzip",
+      "archivefile.data.zip",
+      "archivefile.data.gz"
+    };
+    
+    for (var name : fileNames) {
+      System.out.println(String.format("%s -> %s", name, PowerPurgeProcessor.isArchiveFile(new File(name))));
+    }
+  }
+  
+  @Test
+  @Ignore
   public void testLoadConfig() throws Exception {
     List<PathConfig> configs = PathConfig.fromFile("/Users/dbridges/Desktop/purge-config.json");
     for (var config : configs) {
