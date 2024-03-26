@@ -58,8 +58,8 @@ public class PowerPurge {
     catch (UnrecognizedOptionException ex) {
       LOGGER.error(ex.getMessage());
     }
-    catch (Exception ex) {
-      LOGGER.error("Error", ex);
+    catch (Throwable t) {
+      LOGGER.error("Error", t);
     }
   }
 
