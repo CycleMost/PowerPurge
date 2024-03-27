@@ -68,9 +68,13 @@ public class PathConfig {
     return GSON.fromJson(json, PathConfig.class);
   }
   
-  public String toJson(String json) {
+  public String toJson() {
     return GSON.toJson(this);
   }
+
+  public PathConfig createClone() {
+    return fromJson(toJson());
+  } 
   
   public static List<PathConfig> fromFile(String filePath) throws Exception {
     try {

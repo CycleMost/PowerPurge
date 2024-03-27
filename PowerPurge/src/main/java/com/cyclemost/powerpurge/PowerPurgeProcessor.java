@@ -3,6 +3,7 @@ package com.cyclemost.powerpurge;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -82,6 +83,28 @@ public class PowerPurgeProcessor {
     
     LOGGER.info("Processing: {}", path);
     ++totalPathsProcessed;
+    
+    // Check if there are custom settings for this folder
+    File configFile = Paths.get(path, ".purge-config.json").toFile();
+    if (configFile.exists()) {
+      String json = FileUtils.readFileToString(configFile, Charset.defaultCharset());
+      PathConfig customConfig = PathConfig.fromJson(json);
+      if (customConfig != null) {
+        LOGGER.info("Using folder config {}", configFile.toString());
+        // Clone the config and override the values 
+        // that are specified in the custom config file.
+        config = config.createClone();
+        if (customConfig.getArchiveAgeDays() != 0) {
+          config.setArchiveAgeDays(customConfig.getArchiveAgeDays());
+        }
+        if (customConfig.getFileAgeDays() != 0) {
+          config.setFileAgeDays(customConfig.getFileAgeDays());
+        }
+        if (!StringUtils.isBlank(customConfig.getFilePattern())) {
+          config.setFilePattern(customConfig.getFilePattern());
+        }
+      }
+    }
         
     int archiveCount = 0;
     int deleteCount = 0;
@@ -139,19 +162,14 @@ public class PowerPurgeProcessor {
     if ((!filesToPurge.isEmpty()) && config.isFileArchiveEnabled()) {
       String archiveName = String.format("archive-%s.zip", DATE_FORMAT.format(new Date()));
       File archivePath = Paths.get(path, archiveName).toFile();
-      Map<String, String> env = new HashMap<>();
-      env.put("create", String.valueOf(!archivePath.exists()));    
-      try (FileSystem zipFileSystem = FileSystems.newFileSystem(archivePath.toPath(), env)) {
-        for (File file : filesToPurge) {
-          if (addFileToArchive(file, zipFileSystem)) {
-            ++archiveCount;
-            LOGGER.debug("Archived file: {}", file.getName());
-          }
-          else {
-            // archive failed; do not delete file
-            LOGGER.error("Archive failed for {}", file.getName());
-          }
-        }
+      try {
+        String zipFileName = archivePath.getPath();
+        LOGGER.info("Creating archive {}", zipFileName);
+        ZipUtil.zipFiles(filesToPurge, zipFileName);
+        archiveCount += filesToPurge.size();
+      }
+      catch (Exception ex) {
+        LOGGER.error("Archive failed for {}", archivePath, ex);
       }
     }
     

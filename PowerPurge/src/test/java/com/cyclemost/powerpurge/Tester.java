@@ -2,6 +2,7 @@ package com.cyclemost.powerpurge;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -14,6 +15,23 @@ import org.junit.Test;
  */
 public class Tester {
  
+  @Test
+  @Ignore
+  public void testZip() throws Exception {
+    
+    File dir = new File("/Users/dbridges/Desktop/Data/demandware");
+    String archiveName = "/Users/dbridges/Desktop/Data/demandware/archive1.zip";
+    
+    List<File> filesToZip = new ArrayList<>();
+    for (File file : dir.listFiles()) {
+      if (file.isFile() && !file.isHidden()) {
+        filesToZip.add(file);
+      }
+    }
+    
+    ZipUtil.zipFiles(filesToZip, archiveName);
+  }
+  
   @Test
   @Ignore
   public void testIsArchive() throws Exception {
