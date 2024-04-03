@@ -4,7 +4,8 @@ A Java file cleanup utility. Allows defining file purge/archive rules per direct
 The program runs based on a specified config file that contains the purge rules and associated paths.
 
 ### Command Parameters
-The PowerPurge class takes the following command parameters:\\
+The PowerPurge class takes the following command parameters:
+
 <code>-report</code> Run in report mode; no changes will be made, but total file size will be reported.\
 <code>-config {config-file} {,config-file...}</code> Config file(s) specifying rules to be processed.
 
@@ -45,7 +46,7 @@ create a file called <code>.purge-config.json</code> in that directory. The JSON
 object instead of an array. For example, to override a folder to use a 180 day archive, create the following file:
 
 **`.purge-config.json`**
-```json
+```json .purge-config.json
 {
   "archiveAgeDays": 180
 } 
