@@ -43,7 +43,8 @@ The config file is a .json file with the following structure:
 ### Directory Overrides:
 You can customize the purge rules for an individual subdirectory when the recursive option is used. To override the rule properties for a subdirectory,
 create a file called <code>.purge-config.json</code> in that directory. The JSON structure is identical to the command config file, except that it specifies only a single 
-object instead of an array. For example, to override a folder to use a 180 day archive, create the following file:
+object instead of an array. Any properties not specified in the directory override config file will use their value from the command config file. 
+For example, to override a folder to use a 180 day archive, create the following file:
 
 **`.purge-config.json`**
 ```json .purge-config.json
