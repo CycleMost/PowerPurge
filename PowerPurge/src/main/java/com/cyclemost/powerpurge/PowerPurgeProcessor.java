@@ -4,12 +4,8 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -17,9 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -223,26 +217,6 @@ public class PowerPurgeProcessor {
     return nameMatch && 
            file.isFile() &&
            !file.isHidden();
-  }
-  
-  /**
-   * Adds the specified file to the zip archive.
-   * 
-   * @param file
-   * @param zipFile
-   * @return
-   * @throws IOException 
-   */
-  static boolean addFileToArchive(File file, FileSystem zipFileSystem) throws IOException {
-    try {
-      Path pathInZipFile = zipFileSystem.getPath(file.getName());
-      Files.copy(file.toPath(), pathInZipFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-      return true;
-    }    
-    catch (IOException ex) {
-      LOGGER.error("Error archiving {}", file.getName(), ex);
-      return false;
-    }
   }
   
   /**
