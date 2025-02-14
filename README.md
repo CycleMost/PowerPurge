@@ -7,7 +7,7 @@ The program runs based on a specified config file that contains the purge rules 
 The PowerPurge class takes the following command parameters:
 
 <code>-report</code> Run in report mode; no changes will be made, but total file size will be reported.\
-<code>-config {config-file} {,config-file...}</code> Config file(s) specifying rules to be processed.
+<code>-config {config-file} {config-file...}</code> Config file(s) specifying rules to be processed.
 
 ### Config File
 The config file is a .json file with the following structure:
