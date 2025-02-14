@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 import org.apache.commons.lang3.StringUtils;
@@ -84,7 +85,7 @@ public class PowerPurgeProcessor {
       String json = FileUtils.readFileToString(configFile, Charset.defaultCharset());
       PathConfig customConfig = PathConfig.fromJson(json);
       if (customConfig != null) {
-        LOGGER.info("Using folder config {}", configFile.toString());
+        LOGGER.info("Using folder config: {}", customConfig.toString());
         // Clone the config and override the values 
         // that are specified in the custom config file.
         config = config.createClone();

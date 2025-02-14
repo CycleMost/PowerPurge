@@ -1,13 +1,15 @@
 package com.cyclemost.powerpurge;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * Holds the config values
@@ -33,7 +35,7 @@ public class PathConfig {
   
   @Override
   public String toString() {
-    return String.format("%s (filePattern: %s, recursive: %s, fileAgeDays: %s, archiveAgeDays: %s)",
+    return String.format("\"%s\" (filePattern: %s, recursive: %s, fileAgeDays: %s, archiveAgeDays: %s)",
       getName(),
       getFilePattern(),
       isRecursive(),
