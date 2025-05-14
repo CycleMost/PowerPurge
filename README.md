@@ -34,7 +34,7 @@ The config file is a .json file with the following structure:
 
 ### Rule Properties:
 - <code>name</code>: The name of the rule. It can be anything and doesn't have to be unique.
-- <code>filePattern</code>: a list of file/wildcard patterns to be purged. Default value is "\*" (all files). Multiple patterns can be specified by separating the list with semicolons. For example: "\*.txt;\*.log;\*.xml"
+- <code>filePattern</code>: a list of file/wildcard patterns to be purged. Default value is "\*" (all files). Multiple patterns can be specified by separating the list with semicolons. For example: <code>"\*.txt;\*.log;\*.xml"</code> Note: to include files with no file extension, the pattern must end in <code>*</code> (without a dot).
 - <code>recursive</code>: a flag indicating whether to apply these rules to all child folders (default=false)
 - <code>fileAgeDays</code>: files older than this number of days will be purged (default=-1, meaning do not purge)
 - <code>archiveAgeDays</code>: if greater than zero, deleted files will be placed into an archive zip file in the folder they were deleted from. The archive filename will be "archive-{date}_{time}.zip". These archive files will be removed by PowerPurge once they are <code>archiveAgeDays</code> old. If zero (the default), archives will not be created.
